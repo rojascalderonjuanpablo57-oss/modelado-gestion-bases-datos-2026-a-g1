@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller MER & MR | Shopping Cart System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --accent-primary: #00ff88;
+            --accent-secondary: #ff6b35;
+            --accent-tertiary: #6366f1;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --border-subtle: rgba(255,255,255,0.08);
+            --glow-green: 0 0 60px rgba(0,255,136,0.15);
+            --glow-orange: 0 0 60px rgba(255,107,53,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Grain overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Grid background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, var(--bg-dark), transparent);
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0,255,136,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-secondary);
+            background: rgba(255,107,53,0.1);
+            padding: 0.5rem 1.2rem;
+            border-radius: 100px;
+            border: 1px solid rgba(255,107,53,0.3);
+            margin-bottom: 2rem;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 400;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            box-shadow: var(--glow-green);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        /* Sections */
+        section {
+            padding: 6rem 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-tertiary);
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        h2 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 2.8rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Concepts Grid */
+        .concepts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .concept-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2.5rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .concept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-tertiary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .concept-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0,255,136,0.3);
+        }
+
+        .concept-card:hover::before {
+            opacity: 1;
+        }
+
+        .concept-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(0,255,136,0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .concept-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .concept-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ER Notation */
+        .notation-section {
+            background: linear-gradient(135deg, rgba(99,102,241,0.05), rgba(0,255,136,0.05));
+            border-radius: 24px;
+            padding: 4rem;
+            margin: 4rem 0;
+        }
+
+        .notation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .notation-item {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .notation-symbol {
+            width: 80px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notation-symbol svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .notation-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            color: var(--accent-primary);
+        }
+
+        .notation-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Cardinalities */
+        .cardinality-section {
+            margin: 4rem 0;
+        }
+
+        .cardinality-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 3rem auto;
+        }
+
+        .cardinality-item {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .cardinality-item.warning {
+            border-left-color: var(--accent-secondary);
+        }
+
+        .cardinality-visual {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .cardinality-desc h4 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .cardinality-desc p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Steps Timeline */
+        .steps-section {
+            position: relative;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-primary), var(--accent-tertiary), var(--accent-secondary));
+        }
+
+        .step {
+            position: relative;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .step::before {
+            content: attr(data-step);
+            position: absolute;
+            left: -3rem;
+            top: 2rem;
+            width: 30px;
+            height: 30px;
+            background: var(--accent-primary);
+            color: var(--bg-dark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .step h3 {
+            color: var(--accent-primary);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-content {
+            color: var(--text-secondary);
+        }
+
+        .step-content ul {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .step-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .hint-box {
+            background: rgba(255,107,53,0.1);
+            border: 1px solid rgba(255,107,53,0.3);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .hint-box strong {
+            color: var(--accent-secondary);
+        }
+
+        .question-box {
+            background: rgba(99,102,241,0.1);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .question-box strong {
+            color: var(--accent-tertiary);
+        }
+
+        /* Tables Section */
+        .tables-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .table-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(99,102,241,0.1));
+            padding: 1rem 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .table-fields {
+            padding: 1rem 1.5rem;
+        }
+
+        .field {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.85rem;
+        }
+
+        .field:last-child {
+            border-bottom: none;
+        }
+
+        .field-name {
+            color: var(--text-primary);
+        }
+
+        .field-name.pk {
+            color: var(--accent-secondary);
+        }
+
+        .field-name.fk {
+            color: var(--accent-tertiary);
+        }
+
+        .field-type {
+            color: var(--text-secondary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 4rem;
+        }
+
+        footer p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer .course-info {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-primary);
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem 1.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            section {
+                padding: 3rem 1.5rem;
+            }
+            
+            .notation-section {
+                padding: 2rem;
+            }
+            
+            .timeline {
+                padding-left: 2.5rem;
+            }
+            
+            .step::before {
+                left: -2.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.8s ease forwards;
+        }
+
+        /* Code blocks */
+        code {
+            font-family: 'Space Mono', monospace;
+            background: rgba(0,255,136,0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+        }
+
+        /* Relationship arrows */
+        .relationship-diagram {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 3rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .relationship-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .entity-box {
+            background: rgba(99,102,241,0.15);
+            border: 2px solid var(--accent-tertiary);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .relation-diamond {
+            background: rgba(0,255,136,0.15);
+            border: 2px solid var(--accent-primary);
+            padding: 0.6rem 1.2rem;
+            transform: rotate(0deg);
+            font-size: 0.85rem;
+        }
+
+        .cardinality-badge {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-secondary);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <nav>
+        <div class="logo">DB_WORKSHOP</div>
+        <ul class="nav-links">
+            <li><a href="#conceptos">Conceptos</a></li>
+            <li><a href="#notacion">Notación</a></li>
+            <li><a href="#taller">Taller</a></li>
+            <li><a href="#objetivo">Objetivo Final</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <span class="badge">2026A • Gestión y Modelado de Base de Datos</span>
+        <h1>Del mundo real al<br><span>Modelo Relacional</span></h1>
+        <p class="hero-subtitle">
+            Aprende a diseñar bases de datos construyendo un sistema de carrito de compras. 
+            Desde la identificación de entidades hasta el modelo relacional.
+        </p>
+        <div class="cta-group">
+            <a href="#taller" class="btn btn-primary">Iniciar Taller</a>
+            <a href="#conceptos" class="btn btn-secondary">Ver Conceptos</a>
+        </div>
+    </section>
+
+    <!-- Conceptos Fundamentales -->
+    <section id="conceptos">
+        <div class="section-header">
+            <span class="section-tag">FUNDAMENTOS</span>
+            <h2>Conceptos Clave</h2>
+            <p class="section-desc">Antes de diseñar, debemos entender los bloques fundamentales del modelado de datos.</p>
+        </div>
+
+        <div class="concepts-grid">
+            <div class="concept-card">
+                <div class="concept-icon">📦</div>
+                <h3>Entidad</h3>
+                <p>Representa un objeto o cosa del mundo real sobre la cual queremos almacenar información. Ejemplos: <strong>Persona, Producto, Orden</strong>.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">🏷️</div>
+                <h3>Atributo</h3>
+                <p>Características o propiedades que describen a una entidad. Ejemplos: nombre, precio, fecha, email. Cada atributo tiene un <strong>tipo de dato</strong>.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">🔗</div>
+                <h3>Relación</h3>
+                <p>Conexión o dependencia entre dos o más entidades. Define <strong>cómo interactúan</strong> los datos entre sí en el sistema.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">🔑</div>
+                <h3>Clave Primaria (PK)</h3>
+                <p>Atributo único que identifica cada registro de una entidad. <strong>No puede repetirse ni ser nulo</strong>.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">🔗</div>
+                <h3>Clave Foránea (FK)</h3>
+                <p>Atributo que referencia la clave primaria de otra entidad. Es el <strong>mecanismo para crear relaciones</strong> entre tablas.</p>
+            </div>
+            <div class="concept-card">
+                <div class="concept-icon">📊</div>
+                <h3>Cardinalidad</h3>
+                <p>Define cuántos registros de una entidad se relacionan con registros de otra. Tipos: <strong>1:1, 1:N, N:M</strong>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notación MER -->
+    <section id="notacion">
+        <div class="notation-section">
+            <div class="section-header">
+                <span class="section-tag">SIMBOLOGÍA</span>
+                <h2>Notación del Modelo E-R</h2>
+                <p class="section-desc">Símbolos estándar para representar el Modelo Entidad-Relación</p>
+            </div>
+
+            <div class="notation-grid">
+                <div class="notation-item">
+                    <div class="notation-symbol">
+                        <svg viewBox="0 0 80 50">
+                            <rect x="5" y="10" width="70" height="30" fill="none" stroke="#6366f1" stroke-width="2" rx="4"/>
+                            <text x="40" y="30" text-anchor="middle" fill="#f0f0f5" font-size="10">ENTIDAD</text>
+                        </svg>
+                    </div>
+                    <div class="notation-info">
+                        <h4>Rectángulo</h4>
+                        <p>Representa una entidad (tabla)</p>
+                    </div>
+                </div>
+                <div class="notation-item">
+                    <div class="notation-symbol">
+                        <svg viewBox="0 0 80 50">
+                            <polygon points="40,5 75,25 40,45 5,25" fill="none" stroke="#00ff88" stroke-width="2"/>
+                            <text x="40" y="28" text-anchor="middle" fill="#f0f0f5" font-size="8">RELACIÓN</text>
+                        </svg>
+                    </div>
+                    <div class="notation-info">
+                        <h4>Rombo</h4>
+                        <p>Representa una relación entre entidades</p>
+                    </div>
+                </div>
+                <div class="notation-item">
+                    <div class="notation-symbol">
+                        <svg viewBox="0 0 80 50">
+                            <ellipse cx="40" cy="25" rx="35" ry="18" fill="none" stroke="#ff6b35" stroke-width="2"/>
+                            <text x="40" y="28" text-anchor="middle" fill="#f0f0f5" font-size="9">atributo</text>
+                        </svg>
+                    </div>
+                    <div class="notation-info">
+                        <h4>Óvalo / Elipse</h4>
+                        <p>Representa un atributo de la entidad</p>
+                    </div>
+                </div>
+                <div class="notation-item">
+                    <div class="notation-symbol">
+                        <svg viewBox="0 0 80 50">
+                            <line x1="10" y1="25" x2="70" y2="25" stroke="#8888a0" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div class="notation-info">
+                        <h4>Línea</h4>
+                        <p>Conecta entidades con relaciones/atributos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cardinalidades -->
+        <div class="cardinality-section">
+            <div class="section-header">
+                <span class="section-tag">CARDINALIDAD</span>
+                <h2>Tipos de Relaciones</h2>
+                <p class="section-desc">Cómo se conectan las entidades según la cantidad de registros</p>
+            </div>
+
+            <div class="cardinality-list">
+                <div class="cardinality-item">
+                    <div class="cardinality-visual">1 ─── 1</div>
+                    <div class="cardinality-desc">
+                        <h4>Uno a Uno (1:1)</h4>
+                        <p>Un registro de A se relaciona con exactamente un registro de B y viceversa. Ejemplo: <em>Usuario tiene un Perfil</em>.</p>
+                    </div>
+                </div>
+                <div class="cardinality-item">
+                    <div class="cardinality-visual">1 ─── N</div>
+                    <div class="cardinality-desc">
+                        <h4>Uno a Muchos (1:N)</h4>
+                        <p>Un registro de A puede relacionarse con muchos de B, pero cada B solo con uno de A. Ejemplo: <em>Categoría tiene muchos Productos</em>.</p>
+                    </div>
+                </div>
+                <div class="cardinality-item warning">
+                    <div class="cardinality-visual">N ─── M</div>
+                    <div class="cardinality-desc">
+                        <h4>Muchos a Muchos (N:M)</h4>
+                        <p>Múltiples registros de A se relacionan con múltiples de B. <strong>⚠️ Requiere tabla intermedia</strong>. Ejemplo: <em>Estudiantes matriculan Asignaturas</em>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ejemplo visual de relación -->
+            <div class="relationship-diagram">
+                <h4 style="text-align:center; margin-bottom: 2rem; color: var(--text-secondary);">Ejemplo: Sistema de Matrículas (Relación N:M)</h4>
+                <div class="relationship-row">
+                    <div class="entity-box">ESTUDIANTE</div>
+                    <span class="cardinality-badge">1</span>
+                    <span>───</span>
+                    <span class="cardinality-badge">N</span>
+                    <div class="relation-diamond">matricula</div>
+                    <span class="cardinality-badge">N</span>
+                    <span>───</span>
+                    <span class="cardinality-badge">1</span>
+                    <div class="entity-box">GRUPO</div>
+                </div>
+                <p style="text-align:center; color: var(--text-secondary); margin-top: 1.5rem; font-size: 0.9rem;">
+                    Un estudiante puede matricularse en muchos grupos.<br>
+                    Un grupo puede tener muchos estudiantes matriculados.<br>
+                    <strong style="color: var(--accent-secondary);">→ La relación "matricula" se convierte en una tabla intermedia.</strong>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Taller Paso a Paso -->
+    <section id="taller">
+        <div class="section-header">
+            <span class="section-tag">WORKSHOP</span>
+            <h2>Taller: Shopping Cart System</h2>
+            <p class="section-desc">Construye paso a paso el modelo de datos para un sistema de carrito de compras</p>
+        </div>
+
+        <div class="timeline">
+            <!-- Paso 1 -->
+            <div class="step" data-step="1">
+                <h3>📋 Análisis del Dominio</h3>
+                <div class="step-content">
+                    <p>Lee el siguiente escenario y extrae la información relevante:</p>
+                    <div class="hint-box">
+                        <strong>Escenario:</strong> Una tienda en línea necesita gestionar su catálogo de productos organizados por categorías, 
+                        controlar el inventario con precios y stock, permitir que usuarios registrados 
+                        agreguen productos a un carrito de compras, y manejar roles y permisos para diferentes tipos de usuarios.
+                    </div>
+                    <div class="question-box">
+                        <strong>🤔 Pregunta guía:</strong> ¿Qué "cosas" o "conceptos" del mundo real necesitamos almacenar? 
+                        Haz una lista de sustantivos clave del escenario.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="step" data-step="2">
+                <h3>🔍 Identificar Entidades</h3>
+                <div class="step-content">
+                    <p>Clasifica los elementos del sistema en entidades principales:</p>
+                    <ul>
+                        <li><strong>Entidades de Catálogo:</strong> ¿Qué necesitas para organizar productos?</li>
+                        <li><strong>Entidades de Usuarios:</strong> ¿Cómo representas a las personas y sus accesos?</li>
+                        <li><strong>Entidades de Negocio:</strong> ¿Qué maneja la lógica del carrito?</li>
+                        <li><strong>Entidades de Seguridad:</strong> ¿Cómo controlas permisos?</li>
+                    </ul>
+                    <div class="question-box">
+                        <strong>🤔 Reflexiona:</strong> ¿Por qué <code>persona</code> y <code>user</code> son entidades separadas? 
+                        ¿Todas las personas son usuarios del sistema?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="step" data-step="3">
+                <h3>🏷️ Definir Atributos</h3>
+                <div class="step-content">
+                    <p>Para cada entidad identificada, define sus características:</p>
+                    <ul>
+                        <li>¿Qué información necesitas almacenar de cada entidad?</li>
+                        <li>¿Cuál atributo puede servir como <strong>identificador único (PK)</strong>?</li>
+                        <li>¿Necesitas campos de auditoría? (created_at, updated_at, deleted_at)</li>
+                        <li>¿Qué <strong>tipo de dato</strong> corresponde a cada atributo?</li>
+                    </ul>
+                    <div class="hint-box">
+                        <strong>💡 Pista:</strong> El sistema usa <code>status</code> (INT) para manejar estados y "soft delete" 
+                        con <code>deleted_at</code> en lugar de eliminar registros físicamente.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 4 -->
+            <div class="step" data-step="4">
+                <h3>🔗 Establecer Relaciones</h3>
+                <div class="step-content">
+                    <p>Conecta las entidades identificando cómo se relacionan:</p>
+                    <ul>
+                        <li><strong>Categoría → Producto:</strong> ¿Cuántos productos puede tener una categoría?</li>
+                        <li><strong>Producto → Inventario:</strong> ¿Un producto puede tener múltiples registros de inventario?</li>
+                        <li><strong>Persona → Usuario:</strong> ¿Una persona puede tener múltiples usuarios?</li>
+                        <li><strong>Usuario → Carrito:</strong> ¿Un usuario puede tener varios carritos activos?</li>
+                        <li><strong>Carrito → Items:</strong> ¿Cómo se agregan productos al carrito?</li>
+                        <li><strong>Rol → Permisos:</strong> ¿Cómo se asignan permisos a los roles?</li>
+                    </ul>
+                    <div class="question-box">
+                        <strong>🤔 Analiza:</strong> ¿Por qué <code>shopping_cart_item</code> referencia a <code>inventory</code> 
+                        y no directamente a <code>product</code>? ¿Qué ventaja tiene esto?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 5 -->
+            <div class="step" data-step="5">
+                <h3>📐 Determinar Cardinalidades</h3>
+                <div class="step-content">
+                    <p>Para cada relación, define la cardinalidad (1:1, 1:N, N:M):</p>
+                    <div class="hint-box">
+                        <strong>Completa el análisis:</strong>
+                        <ul style="margin-top: 0.5rem;">
+                            <li>category ──?── product (¿1:1, 1:N o N:M?)</li>
+                            <li>product ──?── inventory (¿1:1, 1:N o N:M?)</li>
+                            <li>person ──?── user (¿1:1, 1:N o N:M?)</li>
+                            <li>user ──?── shopping_cart (¿1:1, 1:N o N:M?)</li>
+                            <li>role ──?── role_permission (¿1:1, 1:N o N:M?)</li>
+                            <li>module ──?── system_view (¿1:1, 1:N o N:M?)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 6 -->
+            <div class="step" data-step="6">
+                <h3>✏️ Dibujar el MER</h3>
+                <div class="step-content">
+                    <p>Con toda la información recopilada, dibuja el Modelo Entidad-Relación:</p>
+                    <ul>
+                        <li>Usa <strong>rectángulos</strong> para las entidades</li>
+                        <li>Usa <strong>óvalos</strong> para los atributos (subraya las PK)</li>
+                        <li>Usa <strong>rombos</strong> para las relaciones</li>
+                        <li>Indica la <strong>cardinalidad</strong> en cada extremo de la relación</li>
+                    </ul>
+                    <div class="hint-box">
+                        <strong>🛠️ Herramientas sugeridas:</strong> draw.io, Lucidchart, diagrams.net, o papel y lápiz.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 7 -->
+            <div class="step" data-step="7">
+                <h3>📊 Simular Datos en Excel</h3>
+                <div class="step-content">
+                    <p>Crea hojas de cálculo para validar tu modelo con datos de ejemplo:</p>
+                    <ul>
+                        <li>Una hoja por cada entidad (tabla)</li>
+                        <li>Columnas = Atributos definidos</li>
+                        <li>Filas = Registros de ejemplo (mínimo 5-10 por tabla)</li>
+                        <li>Verifica que las FK referencien registros existentes</li>
+                    </ul>
+                    <div class="question-box">
+                        <strong>🤔 Validación:</strong> Intenta agregar un <code>shopping_cart_item</code> 
+                        con un <code>inventory_id</code> que no existe. ¿Tiene sentido? 
+                        Este es el principio de la <strong>integridad referencial</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paso 8 -->
+            <div class="step" data-step="8">
+                <h3>🔄 Transformar a Modelo Relacional</h3>
+                <div class="step-content">
+                    <p>Convierte tu MER al Modelo Relacional (MR):</p>
+                    <ul>
+                        <li>Cada <strong>entidad</strong> → una <strong>tabla</strong></li>
+                        <li>Cada <strong>atributo</strong> → una <strong>columna</strong> con tipo de dato</li>
+                        <li>Cada <strong>relación 1:N</strong> → FK en la tabla del lado "N"</li>
+                        <li>Cada <strong>relación N:M</strong> → tabla intermedia con dos FK</li>
+                        <li>Define <strong>constraints</strong>: NOT NULL, UNIQUE, DEFAULT</li>
+                    </ul>
+                    <div class="hint-box">
+                        <strong>💡 Nota:</strong> Este paso es la antesala al código SQL. 
+                        El modelo relacional define exactamente cómo se estructurará la base de datos.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Objetivo Final -->
+    <section id="objetivo">
+        <div class="section-header">
+            <span class="section-tag">META</span>
+            <h2>¿A dónde llegaremos?</h2>
+            <p class="section-desc">Tu modelo eventualmente se traducirá en código SQL como este</p>
+        </div>
+
+        <div class="tables-preview">
+            <div class="table-card">
+                <div class="table-header">📦 category</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name">code</span><span class="field-type">VARCHAR(10) UNIQUE</span></div>
+                    <div class="field"><span class="field-name">name</span><span class="field-type">VARCHAR(255)</span></div>
+                    <div class="field"><span class="field-name">status</span><span class="field-type">INT</span></div>
+                    <div class="field"><span class="field-name">created_at</span><span class="field-type">TIMESTAMP</span></div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">🏷️ product</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name">code</span><span class="field-type">VARCHAR(10) UNIQUE</span></div>
+                    <div class="field"><span class="field-name">name</span><span class="field-type">VARCHAR(255)</span></div>
+                    <div class="field"><span class="field-name">description</span><span class="field-type">TEXT</span></div>
+                    <div class="field"><span class="field-name fk">category_id (FK)</span><span class="field-type">→ category.id</span></div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">📊 inventory</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name">stock</span><span class="field-type">INT</span></div>
+                    <div class="field"><span class="field-name">price</span><span class="field-type">DECIMAL(10,2)</span></div>
+                    <div class="field"><span class="field-name fk">product_id (FK)</span><span class="field-type">→ product.id</span></div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">👤 person</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name">name</span><span class="field-type">VARCHAR(255)</span></div>
+                    <div class="field"><span class="field-name">last_name</span><span class="field-type">VARCHAR(255)</span></div>
+                    <div class="field"><span class="field-name">email</span><span class="field-type">VARCHAR(255) UNIQUE</span></div>
+                    <div class="field"><span class="field-name">birth_date</span><span class="field-type">DATE</span></div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">🔐 user</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name">username</span><span class="field-type">VARCHAR(255) UNIQUE</span></div>
+                    <div class="field"><span class="field-name">password</span><span class="field-type">VARCHAR(255)</span></div>
+                    <div class="field"><span class="field-name fk">person_id (FK)</span><span class="field-type">→ person.id</span></div>
+                    <div class="field"><span class="field-name fk">role_id (FK)</span><span class="field-type">→ role.id</span></div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">🛒 shopping_cart</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name fk">user_id (FK)</span><span class="field-type">→ user.id</span></div>
+                    <div class="field"><span class="field-name">created_at</span><span class="field-type">TIMESTAMP</span></div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">📝 shopping_cart_item</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name fk">shopping_cart_id (FK)</span><span class="field-type">→ shopping_cart.id</span></div>
+                    <div class="field"><span class="field-name fk">inventory_id (FK)</span><span class="field-type">→ inventory.id</span></div>
+                    <div class="field"><span class="field-name">quantity</span><span class="field-type">INT</span></div>
+                    <div class="field"><span class="field-name">total_price</span><span class="field-type">DECIMAL(10,2)</span></div>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">🛡️ role_permission</div>
+                <div class="table-fields">
+                    <div class="field"><span class="field-name pk">id (PK)</span><span class="field-type">INT AUTO_INCREMENT</span></div>
+                    <div class="field"><span class="field-name fk">role_id (FK)</span><span class="field-type">→ role.id</span></div>
+                    <div class="field"><span class="field-name fk">module_id (FK)</span><span class="field-type">→ module.id</span></div>
+                    <div class="field"><span class="field-name">can_create</span><span class="field-type">BOOLEAN</span></div>
+                    <div class="field"><span class="field-name">can_read</span><span class="field-type">BOOLEAN</span></div>
+                    <div class="field"><span class="field-name">can_update</span><span class="field-type">BOOLEAN</span></div>
+                    <div class="field"><span class="field-name">can_delete</span><span class="field-type">BOOLEAN</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 4rem; padding: 2rem; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-subtle);">
+            <h3 style="color: var(--accent-primary); margin-bottom: 1rem;">🎯 Entregables del Taller</h3>
+            <ul style="list-style: none; color: var(--text-secondary); line-height: 2;">
+                <li>✅ Diagrama MER completo (dibujado)</li>
+                <li>✅ Modelo Relacional documentado</li>
+                <li>✅ Archivo Excel con datos simulados</li>
+                <li>✅ Análisis de cardinalidades justificado</li>
+            </ul>
+            <p style="margin-top: 1.5rem; color: var(--accent-secondary); font-weight: 600;">
+                ⚠️ Recuerda: NO debes escribir SQL todavía. El objetivo es dominar el diseño antes de la implementación.
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <p>Taller diseñado para el curso de Base de Datos</p>
+        <p class="course-info">REINDUCCIÓN 2026A • Modelo Entidad-Relación & Modelo Relacional</p>
+    </footer>
+
+    <script>
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animate elements on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.concept-card, .step, .table-card, .notation-item, .cardinality-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
